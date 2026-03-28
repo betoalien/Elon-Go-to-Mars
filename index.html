@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elon's Go to Mars</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; background: #000011; font-family: 'Courier New', monospace; }
+    canvas { display: block; }
+
+    /* Chapter banner slide-in */
+    #chapter-banner {
+      transition: opacity 0.6s ease;
+    }
+
+    /* Elon face */
+    #elon-face {
+      transition: opacity 0.4s ease;
+    }
+
+    /* Star twinkle on menu */
+    @keyframes pulse-glow {
+      0%, 100% { text-shadow: 0 0 20px #00ffff, 0 0 40px #0088ff; }
+      50%       { text-shadow: 0 0 40px #00ffff, 0 0 80px #0088ff, 0 0 120px #004499; }
+    }
+    .title-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
+
+    @keyframes mars-pulse {
+      0%, 100% { box-shadow: 0 0 12px #ff4400; }
+      50%       { box-shadow: 0 0 28px #ff8800, 0 0 50px #ff4400; }
+    }
+    .mars-glow { animation: mars-pulse 1.8s ease-in-out infinite; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-8px); }
+    }
+    .float-anim { animation: float 3s ease-in-out infinite; }
+
+    @keyframes scanline {
+      0%   { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN MENU  (gap 16 + 17)
+════════════════════════════════════════════════ -->
+<div id="menu" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
+
+  <!-- Stars hint (Three.js canvas is behind) -->
+
+  <div class="text-center px-6 max-w-3xl w-full">
+    <!-- Title -->
+    <div class="float-anim mb-2">
+      <h1 class="title-glow text-[clamp(2.8rem,9vw,7rem)] font-black tracking-widest text-cyan-300 leading-none uppercase">
+        ELON'S
+      </h1>
+      <h1 class="title-glow text-[clamp(2rem,7vw,5rem)] font-black tracking-widest text-white leading-none uppercase">
+        GO TO MARS
+      </h1>
+    </div>
+
+    <!-- Mars 2026 badge -->
+    <div class="inline-block mars-glow mt-2 mb-8 px-5 py-1.5 border-2 border-orange-500 rounded-full text-orange-400 font-bold text-sm tracking-widest uppercase">
+      Mars 2026 ™ &nbsp;·&nbsp; SpaceX Certified
+    </div>
+
+    <!-- High score -->
+    <p id="menu-highscore" class="text-gray-400 text-sm mb-6 tracking-wider">Best: 0 pts</p>
+
+    <!-- Play button -->
+    <button id="btn-play"
+      class="group relative w-full max-w-xs mx-auto block py-4 px-8 text-2xl font-black tracking-widest uppercase
+             bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl
+             hover:from-cyan-400 hover:to-blue-500 active:scale-95
+             transition-all duration-150 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/50 mb-4">
+      LAUNCH
+      <span class="block text-xs font-normal opacity-70 mt-0.5">Press ENTER or click</span>
+    </button>
+
+    <!-- Controls reference -->
+    <div class="mt-6 grid grid-cols-2 gap-x-8 gap-y-1 text-xs text-gray-400 tracking-wide max-w-sm mx-auto text-left">
+      <span class="text-cyan-400 font-bold">WASD / Arrows</span><span>Move ship</span>
+      <span class="text-cyan-400 font-bold">Mouse</span><span>Aim</span>
+      <span class="text-cyan-400 font-bold">Space / Z / X / C</span><span>Fire</span>
+      <span class="text-cyan-400 font-bold">R</span><span>Restart after death</span>
+    </div>
+
+    <!-- Enemy legend -->
+    <div class="mt-6 grid grid-cols-3 gap-3 text-xs max-w-lg mx-auto">
+      <div class="bg-red-900/40 border border-red-700/40 rounded-lg p-2 text-center">
+        <div class="text-red-400 font-bold">RED SHIP</div>
+        <div class="text-gray-400">100 pts</div>
+      </div>
+      <div class="bg-red-950/40 border border-yellow-700/40 rounded-lg p-2 text-center">
+        <div class="text-yellow-400 font-bold">COMMUNIST</div>
+        <div class="text-gray-400">250 pts · zigzag</div>
+      </div>
+      <div class="bg-purple-950/40 border border-purple-700/40 rounded-lg p-2 text-center">
+        <div class="text-purple-400 font-bold">WOKE DRONE</div>
+        <div class="text-gray-400">500 pts · slows you</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     HUD  (hidden until game starts)
+════════════════════════════════════════════════ -->
+<div id="hud" class="hidden fixed inset-0 pointer-events-none z-10">
+
+  <!-- Elon face overlay -->
+  <div id="elon-face" class="absolute inset-0 flex items-center justify-center z-30 opacity-0 pointer-events-none">
+    <img id="elon-image" src="images/elon_sad.png" alt="Elon reaction"
+         class="max-w-[min(70vw,420px)] max-h-[min(70vh,420px)] w-auto h-auto object-contain drop-shadow-2xl rounded-xl">
+  </div>
+
+  <!-- Game Over overlay -->
+  <div id="game-over" class="hidden absolute inset-0 bg-black/88 backdrop-blur-sm flex items-center justify-center z-50 px-6 pointer-events-auto">
+    <div class="text-center text-white w-full max-w-2xl">
+      <h1 class="text-[clamp(3.5rem,12vw,9rem)] font-black mb-4 tracking-widest text-red-600 drop-shadow-2xl animate-pulse leading-none">
+        GAME OVER
+      </h1>
+      <p id="final-distance" class="text-[clamp(1.4rem,4vw,2.5rem)] mb-2 font-semibold text-gray-200"></p>
+      <p id="final-score"    class="text-[clamp(1.4rem,4vw,2.5rem)] mb-2 font-bold text-yellow-300"></p>
+      <p id="high-score"     class="text-[clamp(1rem,3vw,1.6rem)] mb-8 text-cyan-400"></p>
+      <p class="text-[clamp(1rem,3vw,1.5rem)] opacity-80">
+        Press <span class="font-bold text-cyan-300">R</span> to try again
+      </p>
+    </div>
+  </div>
+
+  <!-- Victory screen (gap 29) -->
+  <div id="victory-screen" class="hidden absolute inset-0 bg-black/88 backdrop-blur-sm flex items-center justify-center z-50 px-6 pointer-events-auto">
+    <div class="text-center text-white w-full max-w-2xl">
+      <div class="text-6xl mb-4">🚀</div>
+      <h1 class="text-[clamp(2.5rem,9vw,7rem)] font-black mb-4 tracking-widest text-orange-400 leading-none drop-shadow-2xl">
+        MARS REACHED!
+      </h1>
+      <p class="text-xl text-gray-300 mb-4">Elon has landed. Bureaucracy defeated.</p>
+      <p id="victory-score" class="text-[clamp(1.4rem,4vw,2.5rem)] font-bold text-yellow-300 mb-8"></p>
+      <p class="text-lg opacity-80">
+        Press <span class="font-bold text-cyan-300">R</span> to play again
+      </p>
+    </div>
+  </div>
+
+  <!-- Chapter banner (gap 18) -->
+  <div id="chapter-banner"
+       class="opacity-0 absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-20">
+    <div class="px-10 py-4 border border-cyan-400/50 bg-black/60 backdrop-blur-sm rounded-xl">
+      <p class="text-xs tracking-[0.3em] text-cyan-400 uppercase mb-1">Chapter</p>
+      <p id="chapter-name" class="text-[clamp(1.6rem,5vw,3.5rem)] font-black tracking-widest text-white uppercase"></p>
+    </div>
+  </div>
+
+  <!-- Boss HP bar -->
+  <div id="boss-hp-container" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-32 w-80 z-20 pointer-events-none">
+    <p class="text-center text-red-400 font-bold text-xs tracking-widest uppercase mb-1">⚠ BOSS ⚠</p>
+    <div class="w-full bg-gray-900/80 rounded-full h-4 border border-red-700/60 overflow-hidden">
+      <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-red-700 to-red-500 transition-all duration-200" style="width:100%"></div>
+    </div>
+  </div>
+
+  <!-- TOP HUD row -->
+  <div class="absolute top-0 left-0 w-full px-4 pt-3">
+    <div class="flex justify-between items-start max-w-6xl mx-auto gap-4">
+
+      <!-- Left: title + distance -->
+      <div class="space-y-0.5 min-w-0">
+        <h1 class="text-lg font-bold tracking-widest text-cyan-300 drop-shadow-lg whitespace-nowrap">
+          ELON'S GO TO MARS
+        </h1>
+        <div id="distance" class="text-base text-gray-200">Distance: 0 km</div>
+      </div>
+
+      <!-- Centre: Mars progress bar -->
+      <div class="flex-1 max-w-xs mt-1.5 hidden sm:block">
+        <div class="flex justify-between text-xs text-gray-500 mb-0.5">
+          <span>Earth</span><span class="text-orange-400">Mars</span>
+        </div>
+        <div class="w-full bg-gray-800/60 rounded-full h-2.5 border border-gray-600/30 overflow-hidden">
+          <div id="mars-progress"
+               class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-orange-500 transition-all duration-300"
+               style="width:0%"></div>
+        </div>
+        <p class="text-[10px] text-center text-gray-500 mt-0.5">5 000 km to Mars</p>
+      </div>
+
+      <!-- Right: score + shield -->
+      <div class="space-y-1 text-right min-w-[180px]">
+        <!-- Score + multiplier -->
+        <div class="flex items-center justify-end gap-2">
+          <span id="multiplier" class="text-xs font-bold text-yellow-400 bg-yellow-900/40 px-1.5 py-0.5 rounded">x1</span>
+          <span id="score" class="text-xl font-bold text-yellow-300 tabular-nums">0</span>
+        </div>
+        <!-- Multiplier timer bar -->
+        <div class="w-full bg-gray-800/50 rounded-full h-1 overflow-hidden">
+          <div id="mult-bar" class="h-full bg-yellow-400 transition-all duration-100" style="width:0%"></div>
+        </div>
+        <!-- Shield -->
+        <div class="text-sm font-semibold text-cyan-200">
+          Shield: <span id="shield-percent">100</span>%
+        </div>
+        <div class="w-full bg-gray-800/60 rounded-full h-3 overflow-hidden border border-cyan-500/30">
+          <div id="shield-bar"
+               class="bg-gradient-to-r from-cyan-400 to-blue-600 h-full transition-all duration-300"
+               style="width:100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Power-up bar (gap 20) -->
+    <div id="powerup-bar" class="flex gap-2 mt-1.5 max-w-6xl mx-auto"></div>
+  </div>
+
+  <!-- Mobile touch controls -->
+  <div id="touch-controls" class="hidden fixed bottom-0 left-0 right-0 h-1/3 pointer-events-auto z-20 opacity-60">
+    <div class="absolute bottom-10 left-10 w-28 h-28 bg-gray-500/30 rounded-full border border-gray-400/30 touch-none flex items-center justify-center">
+      <span class="text-gray-300 text-xs">MOVE</span>
+    </div>
+    <div class="absolute bottom-10 right-10 w-28 h-28 bg-gray-500/30 rounded-full border border-gray-400/30 touch-none flex items-center justify-center">
+      <span class="text-gray-300 text-xs">AIM</span>
+    </div>
+  </div>
+
+</div><!-- /hud -->
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

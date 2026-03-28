@@ -1,0 +1,33 @@
+### Lista completa de 30 Gaps – Elon’s Go to Mars
+
+1. Proyecto base + escena 3D vacía con renderer, cámara y resize correcto  
+2. Estrellas de fondo procedurales infinitas + niebla espacial sutil  
+3. Modelo básico low-poly de la Starship (group con varias partes)  
+4. Controles WASD + ratón (movimiento lateral + pitch/yaw simple)  
+5. Cámara en tercera persona que sigue a la nave con algo de suavizado  
+6. Movimiento constante hacia adelante (velocidad base + sensación de avance)  
+7. HUD básico con Tailwind: distancia recorrida + vida/escudo  
+8. Sistema de input limpio (keys + mouse look con límites)  
+9. Efecto de propulsores (partículas simples detrás de la nave)  
+10. Sistema de disparo básico (tecla espacio → rayo/láser simple)  
+11. Colisiones básicas nave–bala (bounding sphere o box)  
+12. Primer enemigo simple (nave roja genérica que aparece y se mueve)  
+13. Sistema de spawn de enemigos (pooling + timer)  
+14. Daño mutuo: balas destruyen enemigos, enemigos destruyen nave  
+15. Sistema de vida/escudo + Game Over básico (pantalla negra + texto)  
+16. Menú principal con Tailwind (título, Play, Credits, fake “Mars 2026”)  
+17. Transición entre menú y juego + fade simple  
+18. Sistema de “capítulos” (cambio de fondo/velocidad cada X km)  
+19. Enemigo tipo “Comunista Cósmico” (comportamiento básico + meme al morir)  
+20. Power-up simple (recoge → turbo temporal o escudo)  
+21. Texto flotante al destruir enemigos (estilo meme “Owned”, “Woke destroyed”, etc.)  
+22. Segundo tipo de enemigo (“Woke Drone” – persigue + efecto ralentizar)  
+23. Sistema de score + multiplicador básico  
+24. Mini jefe intermedio (nave más grande con patrón de ataque)  
+25. Sistema de sonido básico (propulsores, disparo, explosión – archivos mp3 o Web Audio)  
+26. Efectos visuales de explosión (partículas + flash)  
+27. Coleccionables de lore (xAI chips, Tesla battery, etc. → texto al recoger)  
+28. Jefe final (estación burocrática marciana + fases)  
+29. Pantalla de victoria + aterrizaje en Marte (animación simple)  
+30. Pulido final: optimizaciones de rendimiento, mobile touch (opcional), high score localStorage
+
